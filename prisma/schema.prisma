@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  username  String    @unique
+  password  String
+  jobTitle  String    @default("Chuyên viên")
+  avatarUrl String?
+  pins      Pin[]
+  savedPins SavedPin[]
+  comments  Comment[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Pin {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?
+  imageUrl    String
+  authorId    Int
+  author      User      @relation(fields: [authorId], references: [id])
+  savedBy     SavedPin[]
+  comments    Comment[]
+  createdAt   DateTime  @default(now())
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  text      String
+  pinId     Int
+  authorId  Int
+  pin       Pin      @relation(fields: [pinId], references: [id])
+  author    User     @relation(fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model SavedPin {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  pinId     Int
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pin       Pin      @relation(fields: [pinId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, pinId]) // Đảm bảo 1 user chỉ lưu 1 ảnh 1 lần
+}
