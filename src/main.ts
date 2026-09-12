@@ -10,16 +10,13 @@ async function bootstrap() {
   // Thêm <NestExpressApplication> để NestJS biết bạn đang dùng lõi Express
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  // Cấu hình CORS dạng mảng để bao quát cả local và production
   app.enableCors({
-    origin: 'https://node-56-qui-capstone-pinterest-fron.vercel.app', // Link Frontend thật của bạn (không có dấu / ở cuối)
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true,
-  });
-
-  // Giữ lại cấu hình CORS chi tiết của bạn (đã xóa dòng gọi trùng lặp)
-  app.enableCors({
-    origin: 'http://localhost:3000',
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    origin: [
+      'http://localhost:3000', 
+      'https://node-56-qui-capstone-pinterest-fron.vercel.app'
+    ],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
 
