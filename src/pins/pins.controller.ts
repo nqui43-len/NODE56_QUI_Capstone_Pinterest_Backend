@@ -1,14 +1,47 @@
 // pinterest-backend/src/pins/pins.controller.ts
 import { Controller, Get, Param, ParseIntPipe, Post, Delete, Patch, UseGuards, UseInterceptors, UploadedFile, Body, Req, Query } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { v2 as cloudinary } from 'cloudinary';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { PinsService } from './pins.service.js';
 import { AuthGuard } from '../auth/auth.guard.js';
 
+// 1. Cấu hình xác thực Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// 2. Khởi tạo bộ lưu trữ Cloud
+const cloudStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'pinterest_clone', // Tên thư mục sẽ tạo trên Cloudinary
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+  } as any,
+});
+
 @Controller('pins')
 export class PinsController {
   constructor(private readonly pinsService: PinsService) {}
+
+  @UseGuards(AuthGuard)
+  @Post('upload')
+  // 3. Đổi cấu hình lưu trữ tại Interceptor
+  @UseInterceptors(FileInterceptor('file', { storage: cloudStorage }))
+  async uploadPin(@UploadedFile() file: Express.Multer.File, @Body() body: any, @Req() req: any) {
+    
+    // file.path bây giờ sẽ KHÔNG phải là đường dẫn cục bộ nữa
+    // Nó chứa trực tiếp link HTTPS xịn từ Cloudinary (VD: https://res.cloudinary.com/...)
+    const imageUrl = file.path; 
+
+    // Kiểm tra xem backend của bạn trước đây có gán cứng 'http://localhost:3001/' không.
+    // Nếu có, hãy xóa đi và chỉ lưu trực tiếp imageUrl vào database.
+    return this.pinsService.create(req.user.userId, imageUrl, body);
+  }
 
   // Nhận thêm query ?search= từ Frontend
   @Get()
@@ -38,23 +71,6 @@ export class PinsController {
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.pinsService.findOne(id);
-  }
-
-  // API Upload (Giữ nguyên code cũ của bạn)
-  @UseGuards(AuthGuard)
-  @Post('upload')
-  @UseInterceptors(FileInterceptor('file', {
-    storage: diskStorage({
-      destination: './uploads',
-      filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-        cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
-      },
-    }),
-  }))
-  async uploadPin(@UploadedFile() file: Express.Multer.File, @Body() body: any, @Req() req: any) {
-    const imageUrl = `http://localhost:3001/uploads/${file.filename}`;
-    return this.pinsService.create(req.user.userId, imageUrl, body);
   }
 
   // API Cập nhật
