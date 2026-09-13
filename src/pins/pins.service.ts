@@ -1,16 +1,10 @@
-// pinterest-backend/src/pins/pins.service.ts
-import {
-  Injectable,
-  ForbiddenException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service.js';
 
 @Injectable()
 export class PinsService {
   constructor(private prisma: PrismaService) {}
 
-  // READ & SEARCH: Lấy danh sách kết hợp tìm kiếm theo tiêu đề/mô tả
   async findAll(searchTerm?: string) {
     return this.prisma.pin.findMany({
       where: searchTerm
@@ -28,7 +22,6 @@ export class PinsService {
     });
   }
 
-  // CREATE (Giữ nguyên logic cũ của bạn)
   async create(userId: number, imageUrl: string, body: any) {
     return this.prisma.pin.create({
       data: {
@@ -40,7 +33,6 @@ export class PinsService {
     });
   }
 
-  // READ: Lấy chi tiết 1 ảnh (Giữ nguyên logic cũ)
   async findOne(id: number) {
     return this.prisma.pin.findUnique({
       where: { id },
@@ -48,7 +40,6 @@ export class PinsService {
     });
   }
 
-  // UPDATE: Cập nhật thông tin ảnh
   async update(pinId: number, userId: number, data: any) {
     const pin = await this.prisma.pin.findUnique({ where: { id: pinId } });
     if (!pin) throw new NotFoundException('Không tìm thấy hình ảnh');
@@ -64,7 +55,6 @@ export class PinsService {
     });
   }
 
-  // DELETE: Xóa ảnh
   async remove(pinId: number, userId: number) {
     const pin = await this.prisma.pin.findUnique({ where: { id: pinId } });
     if (!pin) throw new NotFoundException('Không tìm thấy hình ảnh');
@@ -74,7 +64,6 @@ export class PinsService {
     return this.prisma.pin.delete({ where: { id: pinId } });
   }
 
-  // Lấy danh sách ảnh do một user cụ thể tạo ra
   async findByUser(userId: number) {
     return this.prisma.pin.findMany({
       where: { authorId: userId },
@@ -85,7 +74,6 @@ export class PinsService {
     });
   }
 
-  // Lưu hoặc bỏ lưu ảnh (Toggle)
   async toggleSavePin(userId: number, pinId: number) {
     const pin = await this.prisma.pin.findUnique({ where: { id: pinId } });
     if (!pin) throw new NotFoundException('Không tìm thấy hình ảnh');
@@ -107,7 +95,6 @@ export class PinsService {
     }
   }
 
-  // Lấy danh sách ảnh đã lưu của người dùng
   async getSavedPins(userId: number) {
     const savedPins = await this.prisma.savedPin.findMany({
       where: { userId },
@@ -118,7 +105,6 @@ export class PinsService {
         },
       },
     });
-    // Bóc tách để trả về đúng mảng PinData cho Frontend
     return savedPins.map((sp: any) => sp.pin);
   }
 }

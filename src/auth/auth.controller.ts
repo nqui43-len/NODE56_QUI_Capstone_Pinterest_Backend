@@ -1,4 +1,3 @@
-// pinterest-backend/src/auth/auth.controller.ts
 import { Controller, Patch, Post, Body, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service.js';
 import { AuthGuard } from './auth.guard.js';
@@ -7,7 +6,6 @@ import { AuthGuard } from './auth.guard.js';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  // Thêm Endpoint này
   @UseGuards(AuthGuard)
   @Patch('profile')
   async updateProfile(@Req() req: any, @Body() body: { username: string; avatarUrl?: string }) {

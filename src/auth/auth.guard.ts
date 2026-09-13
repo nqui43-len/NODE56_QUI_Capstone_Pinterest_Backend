@@ -1,4 +1,3 @@
-// pinterest-backend/src/auth/auth.guard.ts
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
@@ -16,7 +15,6 @@ export class AuthGuard implements CanActivate {
     }
     
     try {
-      // Xác thực token và gắn thông tin giải mã được vào request
       const payload = await this.jwtService.verifyAsync(token, {
         secret: process.env.JWT_SECRET || 'fallback_secret_key',
       });
